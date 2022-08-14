@@ -1,11 +1,10 @@
-from flask import request, make_response, abort, render_template, flash
+from flask import request, make_response, abort, render_template, flash, current_app
 from werkzeug.utils import secure_filename
 import pathlib
 from app.utils.utils import set_new_version, get_version
 import os
-from app import create_app
 
-app = create_app()
+app = current_app._get_current_object()
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent
 
@@ -15,6 +14,10 @@ ALLOWED_EXTENSIONS = {'zip'}
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 
 @app.route('/api/upload/', methods=['GET'])
@@ -38,7 +41,7 @@ def uploader():
         filename = secure_filename(file.filename)
         if os.path.exists("./app/media/"+filename):
             os.remove("./app/media/"+filename)
-        file.save("./app/media/"+filename)
+        file.save(str(BASE_DIR) +'/app/media/' +filename)
         set_new_version()
         return 'Yeni versiyon başarıyla yüklendi'
     else:
@@ -62,6 +65,4 @@ def download():
 
 
 
-if __name__ == "__main__":
-    print(BASE_DIR)
-    app.run()
+
